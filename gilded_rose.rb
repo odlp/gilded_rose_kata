@@ -8,6 +8,7 @@ def update_quality(items)
     when /Backstage passes/i
       next update_backstage_passes(item)
     else
+      next update_normal_item(item)
     end
 
     if item.name != 'Aged Brie' && item.name != 'Backstage passes to a TAFKAL80ETC concert'
@@ -78,6 +79,18 @@ def update_backstage_passes(item)
 
   item.sell_in -= 1
   item.quality = [new_quality, 50].min
+end
+
+def update_normal_item(item)
+  item.sell_in -= 1
+
+  if item.sell_in >= 0
+    item.quality -= 1
+  else
+    item.quality -= 2
+  end
+
+  item.quality = item.quality.clamp(0, 50)
 end
 
 # DO NOT CHANGE THINGS BELOW -----------------------------------------

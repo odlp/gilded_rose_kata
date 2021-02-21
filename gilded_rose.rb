@@ -10,15 +10,15 @@ class BackstagePassQualityUpdater
   end
 
   def call(item)
-    new_quality = case item.sell_in
-    when 11..   then item.quality + 1
-    when 6..10  then item.quality + 2
-    when 1..5   then item.quality + 3
-    when ..0    then 0
+    case item.sell_in
+    when 11..   then item.quality += 1
+    when 6..10  then item.quality += 2
+    when 1..5   then item.quality += 3
+    when ..0    then item.quality = 0
     end
 
     item.sell_in -= 1
-    item.quality = [new_quality, 50].min
+    item.quality = item.quality.clamp(0, 50)
   end
 end
 
@@ -29,11 +29,10 @@ class ConjuredItemQualityUpdater
 
   def call(item)
     item.sell_in -= 1
+    item.quality -= 2
 
-    if item.sell_in >= 0
+    if item.sell_in.negative?
       item.quality -= 2
-    else
-      item.quality -= 4
     end
 
     item.quality = item.quality.clamp(0, 50)
@@ -47,14 +46,13 @@ class AgedBrieQualityUpdater
 
   def call(item)
     item.sell_in -= 1
+    item.quality += 1
 
-    if item.quality < 50
+    if item.sell_in.negative?
       item.quality += 1
     end
 
-    if item.sell_in < 0 && item.quality < 50
-      item.quality += 1
-    end
+    item.quality = item.quality.clamp(0, 50)
   end
 end
 
@@ -81,11 +79,10 @@ class QualityUpdater
 
   def call(item)
     item.sell_in -= 1
+    item.quality -= 1
 
-    if item.sell_in >= 0
+    if item.sell_in.negative?
       item.quality -= 1
-    else
-      item.quality -= 2
     end
 
     item.quality = item.quality.clamp(0, 50)

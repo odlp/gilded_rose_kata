@@ -1,5 +1,11 @@
 def update_quality(items)
   items.each do |item|
+    case(item.name)
+    when /Aged Brie/i
+      next update_aged_brie(item)
+    else
+    end
+
     if item.name != 'Aged Brie' && item.name != 'Backstage passes to a TAFKAL80ETC concert'
       if item.quality > 0
         if item.name != 'Sulfuras, Hand of Ragnaros'
@@ -46,6 +52,18 @@ def update_quality(items)
   end
 end
 
+def update_aged_brie(item)
+  item.sell_in -= 1
+
+  if item.quality < 50
+    item.quality += 1
+  end
+
+  if item.sell_in < 0 && item.quality < 50
+    item.quality += 1
+  end
+end
+
 # DO NOT CHANGE THINGS BELOW -----------------------------------------
 
 Item = Struct.new(:name, :sell_in, :quality)
@@ -60,4 +78,3 @@ Item = Struct.new(:name, :sell_in, :quality)
 #   Item.new("Backstage passes to a TAFKAL80ETC concert", 15, 20),
 #   Item.new("Conjured Mana Cake", 3, 6),
 # ]
-

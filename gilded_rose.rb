@@ -1,67 +1,80 @@
 def update_quality(items)
   items.each do |item|
-    case(item.name)
-    when /Aged Brie/i
-      update_aged_brie(item)
-    when /Sulfuras/i
-    when /Backstage passes/i
-      update_backstage_passes(item)
-    when /Conjured/i
-      update_conjured_item(item)
+    QualityUpdater.update(item)
+  end
+end
+
+class BackstagePassQualityUpdater
+  def call(item)
+    new_quality = case item.sell_in
+    when 11..   then item.quality + 1
+    when 6..10  then item.quality + 2
+    when 1..5   then item.quality + 3
+    when ..0    then 0
+    end
+
+    item.sell_in -= 1
+    item.quality = [new_quality, 50].min
+  end
+end
+
+class ConjuredItemQualityUpdater
+  def call(item)
+    item.sell_in -= 1
+
+    if item.sell_in >= 0
+      item.quality -= 2
     else
-      update_normal_item(item)
+      item.quality -= 4
+    end
+
+    item.quality = item.quality.clamp(0, 50)
+  end
+end
+
+class AgedBrieQualityUpdater
+  def call(item)
+    item.sell_in -= 1
+
+    if item.quality < 50
+      item.quality += 1
+    end
+
+    if item.sell_in < 0 && item.quality < 50
+      item.quality += 1
     end
   end
 end
 
-def update_aged_brie(item)
-  item.sell_in -= 1
-
-  if item.quality < 50
-    item.quality += 1
-  end
-
-  if item.sell_in < 0 && item.quality < 50
-    item.quality += 1
-  end
+class SulfurasQualityUpdater
+  def call(_); end
 end
 
-def update_backstage_passes(item)
-  new_quality = case item.sell_in
-  when 11..   then item.quality + 1
-  when 6..10  then item.quality + 2
-  when 1..5   then item.quality + 3
-  when ..0    then 0
+class QualityUpdater
+  SPECIAL_HANDLERS = {
+    /Aged Brie/i => AgedBrieQualityUpdater,
+    /Backstage passes/i => BackstagePassQualityUpdater,
+    /Conjured/i => ConjuredItemQualityUpdater,
+    /Sulfuras/i => SulfurasQualityUpdater,
+  }
+
+  def self.update(item)
+    handler = SPECIAL_HANDLERS.detect { |matcher, _| matcher.match?(item.name) }&.last || self
+    handler.new.call(item)
   end
 
-  item.sell_in -= 1
-  item.quality = [new_quality, 50].min
-end
+  def call(item)
+    item.sell_in -= 1
 
-def update_normal_item(item)
-  item.sell_in -= 1
+    if item.sell_in >= 0
+      item.quality -= 1
+    else
+      item.quality -= 2
+    end
 
-  if item.sell_in >= 0
-    item.quality -= 1
-  else
-    item.quality -= 2
+    item.quality = item.quality.clamp(0, 50)
   end
-
-  item.quality = item.quality.clamp(0, 50)
 end
-
-def update_conjured_item(item)
-  item.sell_in -= 1
-
-  if item.sell_in >= 0
-    item.quality -= 2
-  else
-    item.quality -= 4
-  end
-
-  item.quality = item.quality.clamp(0, 50)
-end
-
 
 # DO NOT CHANGE THINGS BELOW -----------------------------------------
 

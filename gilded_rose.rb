@@ -3,6 +3,8 @@ def update_quality(items)
     case(item.name)
     when /Aged Brie/i
       next update_aged_brie(item)
+    when /Sulfuras/i
+      next
     else
     end
 

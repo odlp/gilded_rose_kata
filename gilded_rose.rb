@@ -5,6 +5,8 @@ def update_quality(items)
       next update_aged_brie(item)
     when /Sulfuras/i
       next
+    when /Backstage passes/i
+      next update_backstage_passes(item)
     else
     end
 
@@ -64,6 +66,18 @@ def update_aged_brie(item)
   if item.sell_in < 0 && item.quality < 50
     item.quality += 1
   end
+end
+
+def update_backstage_passes(item)
+  new_quality = case item.sell_in
+  when 11..   then item.quality + 1
+  when 6..10  then item.quality + 2
+  when 1..5   then item.quality + 3
+  when ..0    then 0
+  end
+
+  item.sell_in -= 1
+  item.quality = [new_quality, 50].min
 end
 
 # DO NOT CHANGE THINGS BELOW -----------------------------------------

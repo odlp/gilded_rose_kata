@@ -5,6 +5,10 @@ def update_quality(items)
 end
 
 class BackstagePassQualityUpdater
+  def self.match?(item)
+    item.name.match?(/Backstage passes/i)
+  end
+
   def call(item)
     new_quality = case item.sell_in
     when 11..   then item.quality + 1
@@ -19,6 +23,10 @@ class BackstagePassQualityUpdater
 end
 
 class ConjuredItemQualityUpdater
+  def self.match?(item)
+    item.name.match?(/Conjured/i)
+  end
+
   def call(item)
     item.sell_in -= 1
 
@@ -33,6 +41,10 @@ class ConjuredItemQualityUpdater
 end
 
 class AgedBrieQualityUpdater
+  def self.match?(item)
+    item.name.match?(/Aged Brie/i)
+  end
+
   def call(item)
     item.sell_in -= 1
 
@@ -47,20 +59,24 @@ class AgedBrieQualityUpdater
 end
 
 class SulfurasQualityUpdater
+  def self.match?(item)
+    item.name.match?(/Sulfuras/i)
+  end
+
   def call(_); end
 end
 
 class QualityUpdater
-  SPECIAL_HANDLERS = {
-    /Aged Brie/i => AgedBrieQualityUpdater,
-    /Backstage passes/i => BackstagePassQualityUpdater,
-    /Conjured/i => ConjuredItemQualityUpdater,
-    /Sulfuras/i => SulfurasQualityUpdater,
-  }
+  SPECIAL_UPDATERS = [
+    AgedBrieQualityUpdater,
+    BackstagePassQualityUpdater,
+    ConjuredItemQualityUpdater,
+    SulfurasQualityUpdater,
+  ]
 
   def self.update(item)
-    handler = SPECIAL_HANDLERS.detect { |matcher, _| matcher.match?(item.name) }&.last || self
-    handler.new.call(item)
+    updater = SPECIAL_UPDATERS.detect { |updater| updater.match?(item) } || self
+    updater.new.call(item)
   end
 
   def call(item)

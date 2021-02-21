@@ -1,6 +1,6 @@
 def update_quality(items)
   items.each do |item|
-    QualityUpdater.update(item)
+    QUALITY_UPDATERS.detect { |updater| updater.match?(item) }.new.call(item)
   end
 end
 
@@ -22,37 +22,50 @@ class BackstagePassQualityUpdater
   end
 end
 
-class ConjuredItemQualityUpdater
+class NormalQualityUpdater
   def self.match?(item)
-    item.name.match?(/Conjured/i)
+    true
   end
 
   def call(item)
     item.sell_in -= 1
-    item.quality -= 2
+    item.quality += quality_step
 
     if item.sell_in.negative?
-      item.quality -= 2
+      item.quality += quality_step
     end
 
     item.quality = item.quality.clamp(0, 50)
   end
+
+  private
+
+  def quality_step
+    -1
+  end
 end
 
-class AgedBrieQualityUpdater
+class AgedBrieQualityUpdater < NormalQualityUpdater
   def self.match?(item)
     item.name.match?(/Aged Brie/i)
   end
 
-  def call(item)
-    item.sell_in -= 1
-    item.quality += 1
+  private
 
-    if item.sell_in.negative?
-      item.quality += 1
-    end
+  def quality_step
+    1
+  end
+end
 
-    item.quality = item.quality.clamp(0, 50)
+class ConjuredItemQualityUpdater < NormalQualityUpdater
+  def self.match?(item)
+    item.name.match?(/Conjured/i)
+  end
+
+  private
+
+  def quality_step
+    -2
   end
 end
 
@@ -64,30 +77,13 @@ class SulfurasQualityUpdater
   def call(_); end
 end
 
-class QualityUpdater
-  SPECIAL_UPDATERS = [
-    AgedBrieQualityUpdater,
-    BackstagePassQualityUpdater,
-    ConjuredItemQualityUpdater,
-    SulfurasQualityUpdater,
-  ]
-
-  def self.update(item)
-    updater = SPECIAL_UPDATERS.detect { |updater| updater.match?(item) } || self
-    updater.new.call(item)
-  end
-
-  def call(item)
-    item.sell_in -= 1
-    item.quality -= 1
-
-    if item.sell_in.negative?
-      item.quality -= 1
-    end
-
-    item.quality = item.quality.clamp(0, 50)
-  end
-end
+QUALITY_UPDATERS = [
+  AgedBrieQualityUpdater,
+  BackstagePassQualityUpdater,
+  ConjuredItemQualityUpdater,
+  SulfurasQualityUpdater,
+  NormalQualityUpdater,
+]
 
 # DO NOT CHANGE THINGS BELOW -----------------------------------------
 

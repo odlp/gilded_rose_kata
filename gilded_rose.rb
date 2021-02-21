@@ -6,6 +6,8 @@ def update_quality(items)
     when /Sulfuras/i
     when /Backstage passes/i
       update_backstage_passes(item)
+    when /Conjured/i
+      update_conjured_item(item)
     else
       update_normal_item(item)
     end
@@ -47,6 +49,19 @@ def update_normal_item(item)
 
   item.quality = item.quality.clamp(0, 50)
 end
+
+def update_conjured_item(item)
+  item.sell_in -= 1
+
+  if item.sell_in >= 0
+    item.quality -= 2
+  else
+    item.quality -= 4
+  end
+
+  item.quality = item.quality.clamp(0, 50)
+end
+
 
 # DO NOT CHANGE THINGS BELOW -----------------------------------------
 
